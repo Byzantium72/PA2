@@ -125,6 +125,7 @@ class RDT:
                 response = Packet.from_byte_S(self.byte_buffer[:length])
                 
                 if response.seq_num < self.seq_num:
+                    test_log('Sender: Reciever is behind sender: ACK')
                     # reciever behind sender
                     # ACK
                     ack = Packet(response.seq_num, '1')
@@ -136,7 +137,7 @@ class RDT:
                     self.seq_num += 1
                     break
                 
-                elif response.msg_S == '0': #NAK
+                elif response.msg_S == '0': # NAK
                     # NAK recieved, need to resend packet
                     continue
 
@@ -158,6 +159,7 @@ class RDT:
                 break  # not enough bytes to read the whole packet
 
             if Packet.corrupt(self.byte_buffer):
+                test_log('Receiver: Packet Corruted: NAK')
                 # packet corrupted send NAK
                 nak = Packet(self.seq_num, '0') #send NAK
                 self.network.udt_send(nak.get_byte_S())
@@ -169,11 +171,13 @@ class RDT:
                 if rcvpkt.msg_S != '1' and rcvpkt.msg_S != '0': # if this packet is not an ACK or NAK
                         
                         if rcvpkt.seq_num < self.seq_num:
+                            test_log('Receiver: Already received packet: ACK')
                             # Duplicate, ACK
                             ack = Packet(rcvpkt.seq_num, '1')
                             self.network.udt_send(ack.get_byte_S())
                         
                         elif rcvpkt.seq_num == self.seq_num:
+                            test_log('Receiver: New Packet recieved: ACK' )
                             # ACK
                             ack = Packet(self.seq_num, '1')
                             self.network.udt_send(ack.get_byte_S())
