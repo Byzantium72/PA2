@@ -98,7 +98,6 @@ class RDT:
     # RDT 2.1 tolerates corrupted packets through retransmission        
     def rdt_2_1_send(self, msg_S):
         sndpkt = Packet(self.seq_num, msg_S)
-        self.seq_num += 1
 
         while True:
             # Send packet
@@ -123,7 +122,7 @@ class RDT:
             
             else: #packet is not corrupt
                 response = Packet.from_byte_S(self.byte_buffer[:length])
-                
+                #print("Packet seq_num: " + str(response.seq_num) + "; Self seq_num: " + str(self.seq_num))
                 if response.seq_num < self.seq_num:
                     test_log('Sender: Reciever is behind sender: ACK')
                     # reciever behind sender
