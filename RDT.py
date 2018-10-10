@@ -2,6 +2,7 @@ import Network
 import argparse
 from time import sleep
 import hashlib
+import time
 
 testing = True
 
@@ -97,51 +98,63 @@ class RDT:
             
     # RDT 2.1 tolerates corrupted packets through retransmission        
     def rdt_2_1_send(self, msg_S):
+        pass
+
+    def rdt_2_1_receive(self):
+        pass
+
+
+    def rdt_3_0_send(self, msg_S):
         sndpkt = Packet(self.seq_num, msg_S)
         self.seq_num += 1
-
+        timeout = 1
+        
         while True:
             # Send packet
             self.network.udt_send(sndpkt.get_byte_S()) 
             self.byte_buffer = ''
             rcvpkt = ''
+            time_of_last_data = time.time()
             
             # Loop until a responce is recieved
-            while rcvpkt == '': 
+            while rcvpkt == '':
+                timed_out = False
                 # store the responce
-                rcvpkt = self.network.udt_receive() 
-            
-            # get length of responce
-            length = int(rcvpkt[:Packet.length_S_length]) 
-            # put responce in buffer
-            self.byte_buffer = rcvpkt
-            
-            # checking if packet is corrupted
-            if Packet.corrupt(self.byte_buffer[:length]): 
-                # need to resend packet
-                continue
-            
-            else: #packet is not corrupt
-                response = Packet.from_byte_S(self.byte_buffer[:length])
-                
-                if response.seq_num < self.seq_num:
-                    # reciever behind sender
-                    # ACK
-                    ack = Packet(response.seq_num, '1')
-                    self.network.udt_send(ack.get_byte_S())
-                
-                if response.msg_S == '1': 
-                    # succsesfully sent a packet
-                    # ACK
-                    self.seq_num += 1
+                rcvpkt = self.network.udt_receive()
+                if time_of_last_data + timeout <= time.time():
+                    timed_out = True
                     break
+            if timed_out == False:
+                # get length of responce
+                length = int(rcvpkt[:Packet.length_S_length]) 
+                # put responce in buffer
+                self.byte_buffer = rcvpkt
                 
-                elif response.msg_S == '0': #NAK
-                    # NAK recieved, need to resend packet
+                # checking if packet is corrupted
+                if Packet.corrupt(self.byte_buffer[:length]): 
+                    # need to resend packet
                     continue
-
-
-    def rdt_2_1_receive(self):
+                
+                else: #packet is not corrupt
+                    response = Packet.from_byte_S(self.byte_buffer[:length])
+                    
+                    if response.seq_num < self.seq_num:
+                        # reciever behind sender
+                        # ACK
+                        ack = Packet(response.seq_num, '1')
+                        self.network.udt_send(ack.get_byte_S())
+                    
+                    if response.msg_S == '1': 
+                        # succsesfully sent a packet
+                        # ACK
+                        self.seq_num += 1
+                        break
+                    
+                    elif response.msg_S == '0': #NAK
+                        # NAK recieved, need to resend packet
+                        continue
+        
+    def rdt_3_0_receive(self):
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
@@ -184,13 +197,6 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
         #if this was the last packet, will return on the next iteration
         return ret_S
-
-
-    def rdt_3_0_send(self, msg_S):
-        pass
-        
-    def rdt_3_0_receive(self):
-        pass
         
 
 if __name__ == '__main__':
