@@ -87,7 +87,7 @@ class NetworkLayer:
             
     ## Receive data from the network and save in internal buffer
     def collect(self):
-#         print (threading.currentThread().getName() + ': Starting')
+        print (threading.currentThread().getName() + ': Starting')
         while(True):
             try:
                 recv_bytes = self.conn.recv(2048)
@@ -99,7 +99,7 @@ class NetworkLayer:
             except socket.timeout as err:
                 pass
             if self.stop:
-#                 print (threading.currentThread().getName() + ': Ending')
+                print (threading.currentThread().getName() + ': Ending')
                 return
            
     ## Deliver collected data to client 
