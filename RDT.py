@@ -3,7 +3,7 @@ import argparse
 from time import sleep
 import hashlib
 
-testing = False
+testing = True
 
 def test_log(result):
 	if testing:
