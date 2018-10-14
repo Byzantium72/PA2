@@ -189,7 +189,7 @@ class RDT:
 				break  
 
 			# check if packet is corrupt
-			if Packet.corrupt(self.byte_buffer):
+			if Packet.corrupt(self.byte_buffer[0:length]):
 				test_log('***** Receiver: Received Corrupted Packet *****')
 				# if corrupt send NAK
 				nak = Packet(self.seq_num, '0') #send NAK
