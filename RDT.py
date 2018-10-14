@@ -110,8 +110,8 @@ class RDT:
 			# loop until rcvpkt is received
 			while rcvpkt == '': 	
 				# rcvpkt = response packet						
-				rcvpkt = self.network.udt_receive() 		
-			
+				rcvpkt = self.network.udt_receive()
+				
 			# get response length
 			length = int(rcvpkt[:Packet.length_S_length]) 	
 			# put response in byte_buffer
@@ -141,16 +141,16 @@ class RDT:
 				
 				# if not behinde and mesage is 1 = ACK then packet was 																					
 				if response.msg_S == '1': 
-					#test_log('***** Sender: Receiver ACK - Moving on to Next Packet *****')						
+					test_log('***** Sender: Receiver ACK - Moving on to Next Packet *****')						
 					# succsesfully sent a Packet 				
 					# increment self.suq_num for next outgoing packet
 					self.seq_num += 1	
 					# break from the while (rcvpkt == '') loop						
-					break										
+					return
 				
 				# or if not behinde and message is 0 = NAK resend packet
 				elif response.msg_S == '0': # NAK 
-					#test_log('***** Sender: NAK Received *****')
+					test_log('***** Sender: NAK Received *****')
 					# continue will go back to while (rcvpkt == '') but 
 					# rcvpkt != '' so it will break to the outer while loop 
 					# and resend the packet				
@@ -175,8 +175,8 @@ class RDT:
 				return ret_S #not enough bytes to read the whole packet												
 
 			# check if packet is corrupt
-			if Packet.corrupt(self.byte_buffer):
-				#test_log('***** Receiver: Received Corrupted Packet *****')
+			if Packet.corrupt(self.byte_buffer[0:length]):
+				test_log('***** Receiver: Received Corrupted Packet *****')
 				# if corrupt send NAK					
 				nak = Packet(self.seq_num, '0') 					
 				self.network.udt_send(nak.get_byte_S())
@@ -198,7 +198,7 @@ class RDT:
 					
 					# Packet has the expected seq_num so its a new Packet
 					elif rcvpkt.seq_num == self.seq_num:
-						#test_log('***** Receiver: New Packet Received *****')
+						test_log('***** Receiver: New Packet Received *****')
 						# send an ACK with corresponding seq_num			
 						ack = Packet(self.seq_num, '1')
 						self.network.udt_send(ack.get_byte_S())
