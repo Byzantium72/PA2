@@ -4,7 +4,7 @@ from time import sleep
 import hashlib
 import time
 
-testing = False
+testing = True
 
 def test_log(result):
 	if testing:
@@ -124,8 +124,9 @@ class RDT:
 				rcvpkt = self.network.udt_receive()
 				#if timeout break
 				if time_of_last_data + timeout <= time.time():
-					timed_out = True
-					break
+                                        timed_out = True
+                                        print("***** Connection timed out *****")
+                                        break
 			if timed_out == False:
 				# get response length
 				length = int(rcvpkt[:Packet.length_S_length]) 
@@ -149,13 +150,13 @@ class RDT:
 					# ie. ACK message was currupt.
 					if response.seq_num < self.seq_num:
 						test_log('***** Sender: Receiver is Behind Sender *****')
-						ack = Packet(response.seq_num, '1')
+						ack = Packet(response.seq_num, "1")
 						# resend ACK with resopnse seq_num
 						self.network.udt_send(ack.get_byte_S())
 					
 					# if not behinde and mesage is 1 = ACK then packet was 
 					if response.msg_S == '1':
-						test_log('***** Sender: Receiver ACK - Moving on to Next Packet *****') 
+						print('***** Sender: Receiver ACK - Moving on to Next Packet *****') 
 						# succsesfully sent a Packet 				
 						# increment self.suq_num for next outgoing packet
 						self.seq_num += 1
@@ -164,7 +165,7 @@ class RDT:
 					
 					# or if not behinde and message is 0 = NAK resend packet
 					elif response.msg_S == '0': #NAK
-						test_log('***** Sender: NAK Received *****')
+						print('***** Sender: NAK Received *****')
 						# continue will go back to while (rcvpkt == '') but 
 						# rcvpkt != '' so it will break to the outer while loop 
 						# and resend the packet	
@@ -190,7 +191,7 @@ class RDT:
 
 			# check if packet is corrupt
 			if Packet.corrupt(self.byte_buffer[0:length]):
-				test_log('***** Receiver: Received Corrupted Packet *****')
+				print('***** Receiver: Received Corrupted Packet *****')
 				# if corrupt send NAK
 				nak = Packet(self.seq_num, '0') #send NAK
 				self.network.udt_send(nak.get_byte_S())
@@ -206,13 +207,13 @@ class RDT:
 					# then we have already received this packet	
 					# send an ACK with corresponding seq_num
 					if rcvpkt.seq_num < self.seq_num:
-						test_log('***** Receiver: Already Received Packet *****')
+						print('***** Receiver: Already Received Packet *****')
 						ack = Packet(rcvpkt.seq_num, '1')
 						self.network.udt_send(ack.get_byte_S())
 					
 					# Packet has the expected seq_num so its a new Packet
 					elif rcvpkt.seq_num == self.seq_num:
-						test_log('***** Receiver: New Packet Received *****')
+						print('***** Receiver: New Packet Received *****')
 						# send an ACK with corresponding seq_num
 						ack = Packet(self.seq_num, '1')
 						self.network.udt_send(ack.get_byte_S())
