@@ -110,16 +110,16 @@ class RDT:
 		
 		while True:
 			# send packet made above
-			self.network.udt_send(sndpkt.get_byte_S()) 
+			self.network.udt_send(sndpkt.get_byte_S())
+			#print("***** Sending packet *****")
 			# clear byte_buffer	
 			self.byte_buffer = ''
 			# declare empty rcvpkt
 			rcvpkt = ''
 			time_of_last_data = time.time()
-			
+			timed_out = False
 			# loop until rcvpkt is received
 			while rcvpkt == '':
-				timed_out = False
 				# rcvpkt = response packet
 				rcvpkt = self.network.udt_receive()
 				#if timeout break
